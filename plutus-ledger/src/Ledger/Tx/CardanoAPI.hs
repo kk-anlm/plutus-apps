@@ -96,12 +96,13 @@ import GHC.Generics (Generic)
 import Ledger.Address qualified as P
 import Ledger.Scripts qualified as P
 import Ledger.Tx.CardanoAPITemp (makeTransactionBody')
-import Plutus.V1.Ledger.Ada qualified as Ada
-import Plutus.V1.Ledger.Api qualified as Api
-import Plutus.V1.Ledger.Api qualified as P
+import Legacy.Plutus.V1.Ledger.Ada qualified as Ada
+import Plutus.V2.Ledger.Api qualified as Api
+import Plutus.V2.Ledger.Api qualified as P
 import Plutus.V1.Ledger.Credential qualified as Credential
-import Plutus.V1.Ledger.Slot qualified as P
-import Plutus.V1.Ledger.Tx qualified as P
+import Legacy.Plutus.V1.Ledger.Slot qualified as P
+import Plutus.V2.Ledger.Tx qualified as P
+import Legacy.Plutus.V2.Ledger.Tx qualified as P
 import Plutus.V1.Ledger.Value qualified as Value
 import PlutusTx.Prelude qualified as PlutusTx
 import Prettyprinter (Pretty (pretty), colon, viaShow, (<+>))
@@ -436,22 +437,17 @@ toCardanoMintWitness redeemers idx (P.MintingPolicy script) = do
         <*> pure (C.fromPlutusData $ Api.toData redeemer)
         <*> pure zeroExecutionUnits
 
+-- TODO: MELD: wait for cardano-api to update C.TxOut
 fromCardanoTxOut :: C.TxOut C.CtxTx era -> Either FromCardanoError P.TxOut
-fromCardanoTxOut (C.TxOut addr value datumHash) =
-    P.TxOut
-    <$> fromCardanoAddress addr
-    <*> pure (fromCardanoTxOutValue value)
-    <*> pure (fromCardanoTxOutDatumHash datumHash)
+fromCardanoTxOut = error "MELD: wait for cardano-api to update C.TxOut"
 
+-- TODO: MELD: wait for cardano-api to update C.TxOut
 toCardanoTxOut
     :: C.NetworkId
     -> (Maybe P.DatumHash -> Either ToCardanoError (C.TxOutDatum ctx C.AlonzoEra))
     -> P.TxOut
     -> Either ToCardanoError (C.TxOut ctx C.AlonzoEra)
-toCardanoTxOut networkId fromHash (P.TxOut addr value datumHash) =
-    C.TxOut <$> toCardanoAddress networkId addr
-            <*> toCardanoTxOutValue value
-            <*> fromHash datumHash
+toCardanoTxOut = error "MELD: wait for cardano-api to update C.TxOut"
 
 lookupDatum :: Map P.DatumHash P.Datum -> Maybe P.DatumHash -> Either ToCardanoError (C.TxOutDatum C.CtxTx C.AlonzoEra)
 lookupDatum datums datumHash =

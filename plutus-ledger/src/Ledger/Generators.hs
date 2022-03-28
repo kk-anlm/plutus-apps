@@ -75,8 +75,7 @@ import Hedgehog.Range qualified as Range
 import Ledger (Ada, CurrencySymbol, Interval, MintingPolicy, OnChainTx (Valid), POSIXTime (POSIXTime, getPOSIXTime),
                POSIXTimeRange, Passphrase (Passphrase), PaymentPrivateKey (unPaymentPrivateKey),
                PaymentPubKey (PaymentPubKey), RedeemerPtr (RedeemerPtr), ScriptContext (ScriptContext),
-               ScriptTag (Mint), Slot (Slot), SlotRange, SomeCardanoApiTx (SomeTx), TokenName,
-               Tx (txFee, txInputs, txMint, txMintScripts, txOutputs, txRedeemers, txValidRange), TxIn,
+               ScriptTag (Mint), Slot (Slot), SlotRange, SomeCardanoApiTx (SomeTx), TokenName, TxIn,
                TxInInfo (txInInfoOutRef), TxInfo (TxInfo), TxOut (txOutValue), TxOutRef (TxOutRef),
                UtxoIndex (UtxoIndex), ValidationCtx (ValidationCtx), Value, _runValidation, addSignature',
                mkMintingPolicyScript, pubKeyTxIn, pubKeyTxOut, scriptCurrencySymbol, toPublicKey, txId)
@@ -87,8 +86,9 @@ import Ledger.Index qualified as Index
 import Ledger.TimeSlot (SlotConfig)
 import Ledger.TimeSlot qualified as TimeSlot
 import Ledger.Value qualified as Value
-import Plutus.V1.Ledger.Ada qualified as Ada
-import Plutus.V1.Ledger.Contexts qualified as Contexts
+import Legacy.Plutus.V1.Ledger.Ada qualified as Ada
+import Plutus.V2.Ledger.Contexts qualified as Contexts
+import Legacy.Plutus.V2.Ledger.Tx (Tx (..))
 import Plutus.V1.Ledger.Interval qualified as Interval
 import Plutus.V1.Ledger.Scripts qualified as Script
 import PlutusTx qualified
