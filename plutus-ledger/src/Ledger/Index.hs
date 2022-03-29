@@ -34,6 +34,7 @@ module Ledger.Index(
     minFee,
     maxFee,
     minAdaTxOut,
+    minAdaTxOutValue,
     mkTxInfo,
     -- * Actual validation
     validateTransaction,
@@ -76,21 +77,21 @@ import Ledger.Scripts
 import Ledger.TimeSlot qualified as TimeSlot
 import Ledger.Tx (txId)
 import Legacy.Plutus.V1.Ledger.Ada qualified as Ada
-import Plutus.V1.Ledger.Address
-import Plutus.V2.Ledger.Api qualified as Api
 import Legacy.Plutus.V1.Ledger.Crypto (PubKey, Signature)
-import Plutus.V2.Ledger.Contexts (ScriptContext (..), ScriptPurpose (..), TxInfo (..))
-import Plutus.V2.Ledger.Contexts qualified as Validation
-import Plutus.V1.Ledger.Credential (Credential (..))
-import Plutus.V1.Ledger.Interval qualified as Interval
-import Plutus.V1.Ledger.Scripts qualified as Scripts
 import Legacy.Plutus.V1.Ledger.Slot qualified as Slot
 import Legacy.Plutus.V2.Ledger.Tx (Tx (..), collateralInputs, datumWitnesses, inputs, lookupRedeemer, signatures,
                                    updateUtxoCollateral)
+import Plutus.V1.Ledger.Address
+import Plutus.V1.Ledger.Credential (Credential (..))
+import Plutus.V1.Ledger.Interval qualified as Interval
+import Plutus.V1.Ledger.Scripts qualified as Scripts
+import Plutus.V1.Ledger.Value qualified as V
+import Plutus.V2.Ledger.Api qualified as Api
+import Plutus.V2.Ledger.Contexts (ScriptContext (..), ScriptPurpose (..), TxInfo (..))
+import Plutus.V2.Ledger.Contexts qualified as Validation
 import Plutus.V2.Ledger.Tx (OutputDatum (OutputDatum, OutputDatumHash), RedeemerPtr (..), ScriptTag (Mint), TxId,
                             TxIn (..), TxInType (ConsumePublicKeyAddress, ConsumeScriptAddress),
                             TxOut (txOutAddress, txOutDatum, txOutValue), TxOutRef, pubKeyTxIns, scriptTxIns)
-import Plutus.V1.Ledger.Value qualified as V
 import PlutusTx (toBuiltinData)
 import PlutusTx.Numeric qualified as P
 import Prettyprinter (Pretty)
@@ -397,6 +398,13 @@ checkPositiveValues t =
 -- TODO: In the future, make the value configurable.
 minAdaTxOut :: Ada.Ada
 minAdaTxOut = Ada.lovelaceOf 2_000_000
+
+{-# INLINABLE minAdaTxOutValue #-}
+-- Minimum required Ada for each tx output.
+--
+-- TODO: In the future, make the value configurable.
+minAdaTxOutValue :: Integer
+minAdaTxOutValue = 2_000_000
 
 -- | Check if each transaction outputs produced at least two Ada (this is a
 -- restriction on the real Cardano network).

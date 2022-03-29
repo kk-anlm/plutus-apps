@@ -18,9 +18,10 @@ import Flat qualified
 import GHC.Generics (Generic)
 import Legacy.Data.Aeson.Extras (decodeSerialise, encodeSerialise)
 import Legacy.Plutus.V1.Ledger.Orphans ()
-import Plutus.V1.Ledger.Scripts (Datum, DatumHash, Script (Script), ScriptHash, ValidatorHash, Redeemer, MintingPolicy, Validator, MintingPolicyHash, ScriptError)
+import Plutus.V1.Ledger.Scripts (Datum, DatumHash, MintingPolicy, MintingPolicyHash, Redeemer, Script (Script),
+                                 ScriptError, ScriptHash, Validator, ValidatorHash)
+import Plutus.V2.Ledger.Api (BuiltinData (BuiltinData), builtinDataToData, dataToBuiltinData)
 import PlutusCore.Data qualified
-import Plutus.V2.Ledger.Api (BuiltinData(BuiltinData), builtinDataToData, dataToBuiltinData)
 
 newtype JSONViaSerialise a = JSONViaSerialise a
 
@@ -54,6 +55,8 @@ deriving anyclass instance Serialise BuiltinData
 
 deriving anyclass instance ToJSON ValidatorHash
 deriving anyclass instance FromJSON ValidatorHash
+deriving anyclass instance ToJSONKey ValidatorHash
+deriving anyclass instance FromJSONKey ValidatorHash
 deriving anyclass instance Serialise ValidatorHash
 deriving anyclass instance Hashable ValidatorHash
 
