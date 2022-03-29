@@ -399,7 +399,7 @@ adjustUnbalancedTx = over (tx . outputs . traverse) adjustTxOut
   where
     adjustTxOut :: TxOut -> TxOut
     adjustTxOut txOut =
-      let missingLovelace = max 0 (Ledger.minAdaTxOutValue - Value.valueOf (txOutValue txOut) Value.adaSymbol Value.adaToken)
+      let missingLovelace = max 0 (Ledger.minAdaTxOut - Value.valueOf (txOutValue txOut) Value.adaSymbol Value.adaToken)
        in txOut { txOutValue = txOutValue txOut <> Value.singleton Value.adaSymbol Value.adaToken missingLovelace }
 
 -- | Add the remaining balance of the total value that the tx must spend.

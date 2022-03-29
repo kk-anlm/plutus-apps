@@ -7,7 +7,6 @@ module Main(main) where
 
 import Control.Monad (forM_)
 import Data.Aeson qualified as JSON
-import Legacy.Data.Aeson.Extras (decodeByteString, encodeSerialise, decodeSerialise)
 import Data.Aeson.Internal qualified as Aeson
 import Data.ByteString.Lazy qualified as BSL
 import Data.List (sort)
@@ -21,7 +20,6 @@ import Hedgehog.Range qualified as Range
 import Ledger (DiffMilliSeconds (DiffMilliSeconds), Interval (Interval), LowerBound (LowerBound), Slot (Slot),
                UpperBound (UpperBound), fromMilliSeconds, interval)
 import Ledger qualified
-import qualified Legacy.Plutus.V1.Ledger.Ada as Ada
 import Ledger.Bytes as Bytes
 import Ledger.Fee (FeeConfig (..), calcFees)
 import Ledger.Generators qualified as Gen
@@ -31,6 +29,7 @@ import Ledger.TimeSlot qualified as TimeSlot
 import Ledger.Tx qualified as Tx
 import Ledger.Tx.CardanoAPISpec qualified
 import Ledger.Value qualified as Value
+import Legacy.Data.Aeson.Extras (decodeByteString, decodeSerialise, encodeSerialise)
 import PlutusTx.Prelude qualified as PlutusTx
 import Test.Tasty (TestTree, defaultMain, testGroup)
 import Test.Tasty.HUnit (testCase)
@@ -121,7 +120,7 @@ splitVal = property $ do
 
 splitValMinAda :: Property
 splitValMinAda = property $ do
-    let minAda = Ada.getLovelace $ Ledger.minAdaTxOut + Ledger.maxFee
+    let minAda = Ledger.minAdaTxOut + Ledger.maxFee
     i <- forAll $ Gen.integral $ Range.linear minAda (100_000_000 :: Integer)
     n <- forAll $ Gen.integral $ Range.linear 1 100
     vs <- forAll $ Gen.splitVal n i
@@ -236,7 +235,7 @@ ciTxOutRoundTrip = property $ do
 calcFeesTest :: Property
 calcFeesTest = property $ do
     let feeCfg = FeeConfig 10 0.3
-    Hedgehog.assert $ calcFees feeCfg 11 == Ada.lovelaceOf 13
+    Hedgehog.assert $ calcFees feeCfg 11 == 13
 
 -- | Asserting that time range of 'scSlotZeroTime' to 'scSlotZeroTime + scSlotLength'
 -- is 'Slot 0' and the time after that is 'Slot 1'.

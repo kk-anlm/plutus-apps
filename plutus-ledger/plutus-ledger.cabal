@@ -68,7 +68,6 @@ library
         Ledger.Value
         Ledger.Validation
         Legacy.Data.Aeson.Extras
-        Legacy.Plutus.V1.Ledger.Ada
         Legacy.Plutus.V1.Ledger.Address
         Legacy.Plutus.V1.Ledger.Bytes
         Legacy.Plutus.V1.Ledger.Credential

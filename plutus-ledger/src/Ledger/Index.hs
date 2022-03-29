@@ -34,7 +34,6 @@ module Ledger.Index(
     minFee,
     maxFee,
     minAdaTxOut,
-    minAdaTxOutValue,
     mkTxInfo,
     -- * Actual validation
     validateTransaction,
@@ -76,7 +75,6 @@ import Ledger.Orphans ()
 import Ledger.Scripts
 import Ledger.TimeSlot qualified as TimeSlot
 import Ledger.Tx (txId)
-import Legacy.Plutus.V1.Ledger.Ada qualified as Ada
 import Legacy.Plutus.V1.Ledger.Crypto (PubKey, Signature)
 import Legacy.Plutus.V1.Ledger.Slot qualified as Slot
 import Legacy.Plutus.V2.Ledger.Tx (Tx (..), collateralInputs, datumWitnesses, inputs, lookupRedeemer, signatures,
@@ -396,15 +394,8 @@ checkPositiveValues t =
 -- Minimum required Ada for each tx output.
 --
 -- TODO: In the future, make the value configurable.
-minAdaTxOut :: Ada.Ada
-minAdaTxOut = Ada.lovelaceOf 2_000_000
-
-{-# INLINABLE minAdaTxOutValue #-}
--- Minimum required Ada for each tx output.
---
--- TODO: In the future, make the value configurable.
-minAdaTxOutValue :: Integer
-minAdaTxOutValue = 2_000_000
+minAdaTxOut :: Integer
+minAdaTxOut = 2_000_000
 
 -- | Check if each transaction outputs produced at least two Ada (this is a
 -- restriction on the real Cardano network).
@@ -415,25 +406,25 @@ minAdaTxOutValue = 2_000_000
 checkMinAdaInTxOutputs :: ValidationMonad m => Tx -> m ()
 checkMinAdaInTxOutputs t@Tx { txOutputs } =
     for_ txOutputs $ \txOut ->
-        if Ada.fromValue (txOutValue txOut) >= minAdaTxOut
+        if V.valueOf (txOutValue txOut) V.adaSymbol V.adaToken >= minAdaTxOut
             then pure ()
             else throwError $ ValueContainsLessThanMinAda t txOut
 
 -- | Check if the fees are paid exclusively in Ada.
 checkFeeIsAda :: ValidationMonad m => Tx -> m ()
 checkFeeIsAda t =
-    if (Ada.toValue $ Ada.fromValue $ txFee t) == txFee t
+    if (V.singleton V.adaSymbol V.adaToken $ V.valueOf (txFee t) V.adaSymbol V.adaToken) == txFee t
     then pure ()
     else throwError $ NonAdaFees t
 
 -- | Minimum transaction fee.
 minFee :: Tx -> V.Value
-minFee = const (Ada.lovelaceValueOf 10)
+minFee = const (V.singleton V.adaSymbol V.adaToken 10)
 
 -- | TODO Should be calculated based on the maximum script size permitted on
 -- the Cardano blockchain.
-maxFee :: Ada.Ada
-maxFee = Ada.lovelaceOf 1_000_000
+maxFee :: Integer
+maxFee = 1_000_000
 
 -- | Check that transaction fee is bigger than the minimum fee.
 --   Skip the check on the first transaction (no inputs).

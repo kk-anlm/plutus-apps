@@ -45,7 +45,7 @@ import Cardano.Ledger.Alonzo (TxBody, TxOut)
 import Cardano.Ledger.Alonzo.Genesis (prices)
 import Cardano.Ledger.Alonzo.PParams (PParams' (..))
 import Cardano.Ledger.Alonzo.Rules.Utxos (constructValidated)
-import Cardano.Ledger.Alonzo.Scripts (ExUnits (ExUnits), CostModels (unCostModels))
+import Cardano.Ledger.Alonzo.Scripts (CostModels (unCostModels), ExUnits (ExUnits))
 import Cardano.Ledger.Alonzo.Tools qualified as C.Ledger
 import Cardano.Ledger.Alonzo.Tx (ValidatedTx (..))
 import Cardano.Ledger.Alonzo.TxBody (TxBody (TxBody, reqSignerHashes))
@@ -78,9 +78,8 @@ import Ledger.Index qualified as P
 import Ledger.Tx qualified as P
 import Ledger.Tx.CardanoAPI qualified as P
 import Ledger.Value qualified as P
-import Legacy.Plutus.V1.Ledger.Ada qualified as P
-import Plutus.V2.Ledger.Api qualified as P
 import Plutus.V1.Ledger.Scripts qualified as P
+import Plutus.V2.Ledger.Api qualified as P
 import PlutusTx.Builtins qualified as Builtins
 import PlutusTx.ErrorCodes (checkHasFailedError)
 
@@ -273,13 +272,13 @@ evaluateTransactionFee utxo requiredSigners tx = do
   let nkeys = C.Api.estimateTransactionKeyWitnessCount txBodyContent
   txBody <- makeTransactionBody utxo txBodyContent
   case C.Api.evaluateTransactionFee emulatorProtocolParameters txBody nkeys 0 of
-    C.Api.Lovelace fee -> pure $ P.lovelaceValueOf fee
+    C.Api.Lovelace fee -> pure $ P.singleton P.adaSymbol P.adaToken fee
 
 evaluateMinLovelaceOutput :: TxOut EmulatorEra -> P.Value
 evaluateMinLovelaceOutput = toPlutusValue . C.Ledger.evaluateMinLovelaceOutput emulatorPParams
 
 toPlutusValue :: Coin -> P.Value
-toPlutusValue (Coin c) = P.lovelaceValueOf c
+toPlutusValue (Coin c) = P.singleton P.adaSymbol P.adaToken c
 
 fromPlutusTx
   :: UTxO EmulatorEra

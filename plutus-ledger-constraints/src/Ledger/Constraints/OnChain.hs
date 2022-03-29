@@ -61,7 +61,7 @@ checkOwnOutputConstraint ctx@ScriptContext{scriptContextTxInfo} ScriptOutputCons
     let hsh = V.findDatumHash (Ledger.Datum $ toBuiltinData ocDatum) scriptContextTxInfo
         checkValue val =
                Value.valueOf val adaSymbol adaToken >= Value.valueOf ocValue adaSymbol adaToken
-            && Value.valueOf val adaSymbol adaToken <= Value.valueOf ocValue adaSymbol adaToken + Ledger.minAdaTxOutValue
+            && Value.valueOf val adaSymbol adaToken <= Value.valueOf ocValue adaSymbol adaToken + Ledger.minAdaTxOut
             && Value.noAdaValue val == Value.noAdaValue ocValue
         checkOutput TxOut{txOutValue, txOutDatum=Ledger.OutputDatum datum} =
                checkValue txOutValue && (Ledger.Datum $ toBuiltinData ocDatum) == datum
@@ -117,7 +117,7 @@ checkTxConstraint ctx@ScriptContext{scriptContextTxInfo} = \case
             addr = Address.scriptHashAddress vlh
             checkValue val address =
                    Value.valueOf val adaSymbol adaToken >= Value.valueOf vl adaSymbol adaToken
-                && Value.valueOf val adaSymbol adaToken <= Value.valueOf vl adaSymbol adaToken + Ledger.minAdaTxOutValue
+                && Value.valueOf val adaSymbol adaToken <= Value.valueOf vl adaSymbol adaToken + Ledger.minAdaTxOut
                 && Value.noAdaValue val == Value.noAdaValue vl
                 && address == addr
             checkOutput TxOut{txOutAddress, txOutValue, txOutDatum=Ledger.OutputDatumHash svh} =

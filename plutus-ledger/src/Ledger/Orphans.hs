@@ -17,7 +17,6 @@ import Control.Lens ((&), (.~), (?~))
 import Control.Monad.Freer.Extras.Log (LogLevel, LogMessage)
 import Crypto.Hash qualified as Crypto
 import Data.Aeson qualified as JSON
-import Legacy.Data.Aeson.Extras qualified as JSON
 import Data.Bifunctor (bimap)
 import Data.ByteArray qualified as BA
 import Data.OpenApi qualified as OpenApi
@@ -25,23 +24,23 @@ import Data.Text qualified as Text
 import Data.Typeable (Proxy (Proxy), Typeable)
 import GHC.Exts (IsList (fromList))
 import GHC.Generics (Generic)
-import Legacy.Plutus.V1.Ledger.Ada (Ada (Lovelace))
-import Plutus.V2.Ledger.Api (Address, BuiltinByteString, BuiltinData, Credential,
-                             CurrencySymbol (CurrencySymbol), Data, Datum (Datum), DatumHash (DatumHash), Extended,
-                             Interval, LedgerBytes (LedgerBytes), LowerBound, MintingPolicy (MintingPolicy),
-                             MintingPolicyHash (MintingPolicyHash), POSIXTime (POSIXTime), PubKeyHash (PubKeyHash),
-                             Redeemer (Redeemer), RedeemerHash (RedeemerHash), Script, StakeValidator (StakeValidator),
+import Legacy.Data.Aeson.Extras qualified as JSON
+import Legacy.Plutus.V1.Ledger.Crypto (PrivateKey (PrivateKey, getPrivateKey), PubKey (PubKey), Signature (Signature))
+import Legacy.Plutus.V1.Ledger.Slot (Slot (Slot))
+import Legacy.Plutus.V2.Ledger.Tx (Tx)
+import Plutus.V1.Ledger.Bytes (bytes)
+import Plutus.V1.Ledger.Scripts (ScriptHash (..))
+import Plutus.V1.Ledger.Time (DiffMilliSeconds (DiffMilliSeconds))
+import Plutus.V1.Ledger.Value (AssetClass (AssetClass))
+import Plutus.V2.Ledger.Api (Address, BuiltinByteString, BuiltinData, Credential, CurrencySymbol (CurrencySymbol), Data,
+                             Datum (Datum), DatumHash (DatumHash), Extended, Interval, LedgerBytes (LedgerBytes),
+                             LowerBound, MintingPolicy (MintingPolicy), MintingPolicyHash (MintingPolicyHash),
+                             OutputDatum, POSIXTime (POSIXTime), PubKeyHash (PubKeyHash), Redeemer (Redeemer),
+                             RedeemerHash (RedeemerHash), Script, StakeValidator (StakeValidator),
                              StakeValidatorHash (StakeValidatorHash), StakingCredential, TokenName (TokenName),
                              TxId (TxId), TxOut, TxOutRef, UpperBound, Validator (Validator),
-                             ValidatorHash (ValidatorHash), Value (Value), fromBytes, OutputDatum)
-import Plutus.V1.Ledger.Bytes (bytes)
-import Legacy.Plutus.V1.Ledger.Crypto (PrivateKey (PrivateKey, getPrivateKey), PubKey (PubKey), Signature (Signature))
-import Plutus.V1.Ledger.Scripts (ScriptHash (..))
-import Legacy.Plutus.V1.Ledger.Slot (Slot (Slot))
-import Plutus.V1.Ledger.Time (DiffMilliSeconds (DiffMilliSeconds))
+                             ValidatorHash (ValidatorHash), Value (Value), fromBytes)
 import Plutus.V2.Ledger.Tx (RedeemerPtr, ScriptTag, TxIn, TxInType)
-import Legacy.Plutus.V2.Ledger.Tx (Tx)
-import Plutus.V1.Ledger.Value (AssetClass (AssetClass))
 import PlutusCore (Kind, Some, Term, Type, ValueOf, Version)
 import PlutusTx.AssocMap qualified as AssocMap
 import Web.HttpApiData (FromHttpApiData (parseUrlPiece), ToHttpApiData (toUrlPiece))
@@ -124,7 +123,6 @@ instance OpenApi.ToSchema Data where
           , ("B", bytestringSchema)
           ]
 deriving instance OpenApi.ToSchema ann => OpenApi.ToSchema (Kind ann)
-deriving newtype instance OpenApi.ToSchema Ada
 deriving instance OpenApi.ToSchema Tx
 deriving instance OpenApi.ToSchema ScriptTag
 deriving instance OpenApi.ToSchema RedeemerPtr

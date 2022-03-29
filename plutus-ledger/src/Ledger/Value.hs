@@ -7,7 +7,6 @@ module Ledger.Value
   , isAdaOnlyValue
   ) where
 
-import Legacy.Plutus.V1.Ledger.Ada qualified as Ada
 import Plutus.V1.Ledger.Value as Export
 import PlutusTx.Prelude (Bool, Eq (..), (-))
 
@@ -19,7 +18,7 @@ noAdaValue v = v - adaOnlyValue v
 {-# INLINABLE adaOnlyValue #-}
 -- | Value without any non-Ada.
 adaOnlyValue :: Value -> Value
-adaOnlyValue v = Ada.toValue (Ada.fromValue v)
+adaOnlyValue v = singleton adaSymbol adaToken (valueOf v adaSymbol adaToken)
 
 {-# INLINABLE isAdaOnlyValue #-}
 isAdaOnlyValue :: Value -> Bool

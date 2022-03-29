@@ -87,7 +87,7 @@ mustPayToPubKeyAddressStakePubKeyNotNothingProp :: Property
 mustPayToPubKeyAddressStakePubKeyNotNothingProp = property $ do
     pkh <- forAll $ Ledger.paymentPubKeyHash <$> Gen.element Gen.knownPaymentPublicKeys
     let skh = StakePubKeyHash $ PubKeyHash "00000000000000000000000000000000000000000000000000000000"
-        txE = mkTx @Void mempty (Constraints.mustPayToPubKeyAddress pkh skh (Value.singleton Value.adaSymbol Value.adaToken Ledger.minAdaTxOutValue))
+        txE = mkTx @Void mempty (Constraints.mustPayToPubKeyAddress pkh skh (Value.singleton Value.adaSymbol Value.adaToken Ledger.minAdaTxOut))
     case txE of
       Left _ ->
           Hedgehog.assert False

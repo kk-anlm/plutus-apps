@@ -96,14 +96,13 @@ import GHC.Generics (Generic)
 import Ledger.Address qualified as P
 import Ledger.Scripts qualified as P
 import Ledger.Tx.CardanoAPITemp (makeTransactionBody')
-import Legacy.Plutus.V1.Ledger.Ada qualified as Ada
+import Legacy.Plutus.V1.Ledger.Slot qualified as P
+import Legacy.Plutus.V2.Ledger.Tx qualified as P
+import Plutus.V1.Ledger.Credential qualified as Credential
+import Plutus.V1.Ledger.Value qualified as Value
 import Plutus.V2.Ledger.Api qualified as Api
 import Plutus.V2.Ledger.Api qualified as P
-import Plutus.V1.Ledger.Credential qualified as Credential
-import Legacy.Plutus.V1.Ledger.Slot qualified as P
 import Plutus.V2.Ledger.Tx qualified as P
-import Legacy.Plutus.V2.Ledger.Tx qualified as P
-import Plutus.V1.Ledger.Value qualified as Value
 import PlutusTx.Prelude qualified as PlutusTx
 import Prettyprinter (Pretty (pretty), colon, viaShow, (<+>))
 
@@ -532,7 +531,7 @@ fromCardanoTxOutValue (C.TxOutValue _ value)      = fromCardanoValue value
 
 toCardanoTxOutValue :: P.Value -> Either ToCardanoError (C.TxOutValue C.AlonzoEra)
 toCardanoTxOutValue value = do
-    when (Ada.fromValue value == mempty) (Left OutputHasZeroAda)
+    when (Value.valueOf value Value.adaSymbol Value.adaToken == 0) (Left OutputHasZeroAda)
     C.TxOutValue C.MultiAssetInAlonzoEra <$> toCardanoValue value
 
 fromCardanoTxOutDatumHash :: C.TxOutDatum C.CtxTx era -> Maybe P.DatumHash
@@ -560,7 +559,7 @@ toCardanoMintValue redeemers value mps =
 fromCardanoValue :: C.Value -> P.Value
 fromCardanoValue (C.valueToList -> list) = foldMap toValue list
     where
-        toValue (C.AdaAssetId, C.Quantity q) = Ada.lovelaceValueOf q
+        toValue (C.AdaAssetId, C.Quantity q) = Value.singleton Value.adaSymbol Value.adaToken q
         toValue (C.AssetId policyId assetName, C.Quantity q)
             = Value.singleton (Value.mpsSymbol $ fromCardanoPolicyId policyId) (fromCardanoAssetName assetName) q
 
@@ -568,7 +567,7 @@ toCardanoValue :: P.Value -> Either ToCardanoError C.Value
 toCardanoValue = fmap C.valueFromList . traverse fromValue . Value.flattenValue
     where
         fromValue (currencySymbol, tokenName, amount)
-            | currencySymbol == Ada.adaSymbol && tokenName == Ada.adaToken =
+            | currencySymbol == Value.adaSymbol && tokenName == Value.adaToken =
                 pure (C.AdaAssetId, C.Quantity amount)
             | otherwise =
                 (,) <$> (C.AssetId <$> toCardanoPolicyId (Value.currencyMPSHash currencySymbol) <*> pure (toCardanoAssetName tokenName)) <*> pure (C.Quantity amount)
@@ -593,12 +592,12 @@ toCardanoFee :: P.Value -> Either ToCardanoError (C.TxFee C.AlonzoEra)
 toCardanoFee value = C.TxFeeExplicit C.TxFeesExplicitInAlonzoEra <$> toCardanoLovelace value
 
 fromCardanoLovelace :: C.Lovelace -> P.Value
-fromCardanoLovelace (C.lovelaceToQuantity -> C.Quantity lovelace) = Ada.lovelaceValueOf lovelace
+fromCardanoLovelace (C.lovelaceToQuantity -> C.Quantity lovelace) = Value.singleton Value.adaSymbol Value.adaToken lovelace
 
 toCardanoLovelace :: P.Value -> Either ToCardanoError C.Lovelace
-toCardanoLovelace value = if value == Ada.lovelaceValueOf lovelace then pure . C.quantityToLovelace . C.Quantity $ lovelace else Left ValueNotPureAda
+toCardanoLovelace value = if value == Value.singleton Value.adaSymbol Value.adaToken lovelace then pure . C.quantityToLovelace . C.Quantity $ lovelace else Left ValueNotPureAda
     where
-        Ada.Lovelace lovelace = Ada.fromValue value
+        lovelace = Value.valueOf value Value.adaSymbol Value.adaToken
 
 fromCardanoValidityRange :: (C.TxValidityLowerBound era, C.TxValidityUpperBound era) -> P.SlotRange
 fromCardanoValidityRange (l, u) = P.Interval (fromCardanoValidityLowerBound l) (fromCardanoValidityUpperBound u)
