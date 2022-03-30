@@ -215,42 +215,20 @@ instance HasDbType ByteString where
     toDbValue = id
     fromDbValue = id
 
-instance HasDbType DatumHash where
-    type DbType DatumHash = ByteString
-    toDbValue (DatumHash (BuiltinByteString s)) = s
-    fromDbValue s = DatumHash (BuiltinByteString s)
+instance HasDbType BuiltinByteString where
+    type DbType BuiltinByteString = ByteString
+    toDbValue (BuiltinByteString bs) = bs
+    fromDbValue = BuiltinByteString
 
-instance HasDbType ValidatorHash where
-    type DbType ValidatorHash = ByteString
-    toDbValue (ValidatorHash (BuiltinByteString s)) = s
-    fromDbValue s = ValidatorHash (BuiltinByteString s)
-
-instance HasDbType MintingPolicyHash where
-    type DbType MintingPolicyHash = ByteString
-    toDbValue (MintingPolicyHash (BuiltinByteString s)) = s
-    fromDbValue s = MintingPolicyHash (BuiltinByteString s)
-
-instance HasDbType RedeemerHash where
-    type DbType RedeemerHash = ByteString
-    toDbValue (RedeemerHash (BuiltinByteString s)) = s
-    fromDbValue s = RedeemerHash (BuiltinByteString s)
-
-instance HasDbType StakeValidatorHash where
-    type DbType StakeValidatorHash = ByteString
-    toDbValue (StakeValidatorHash (BuiltinByteString s)) = s
-    fromDbValue s = StakeValidatorHash (BuiltinByteString s)
-
-instance HasDbType TxId where
-    type DbType TxId = ByteString
-    toDbValue (TxId (BuiltinByteString s)) = s
-    fromDbValue s = TxId (BuiltinByteString s)
+deriving via BuiltinByteString instance HasDbType DatumHash
+deriving via BuiltinByteString instance HasDbType ValidatorHash
+deriving via BuiltinByteString instance HasDbType MintingPolicyHash
+deriving via BuiltinByteString instance HasDbType RedeemerHash
+deriving via BuiltinByteString instance HasDbType StakeValidatorHash
+deriving via BuiltinByteString instance HasDbType TxId
+deriving via BuiltinByteString instance HasDbType ScriptHash
 
 deriving via ByteString instance HasDbType BlockId
-
-instance HasDbType ScriptHash where
-    type DbType ScriptHash = ByteString
-    toDbValue (ScriptHash (BuiltinByteString s)) = s
-    fromDbValue s = ScriptHash (BuiltinByteString s)
 
 newtype Serialisable a = Serialisable { getSerialisable :: a }
 instance Serialise a => HasDbType (Serialisable a) where

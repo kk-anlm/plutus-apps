@@ -90,7 +90,6 @@ instance ShowProxy a => ShowProxy [a] where
   showProxy _ = "[" ++ showProxy (Proxy @a) ++ "]"
 
 deriving instance StandardHash Block
-deriving instance Generic BuiltinByteString
 deriving instance NoThunks BuiltinByteString
 deriving newtype instance NoThunks TxId
 

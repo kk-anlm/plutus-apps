@@ -94,19 +94,14 @@ getUtxoutFromRef ref@TxOutRef{txOutRefId, txOutRefIdx} = do
       case addressCredential $ txOutAddress txout of
         PubKeyCredential _ ->
           pure $ Just $ PublicKeyChainIndexTxOut (txOutAddress txout) (txOutValue txout)
-        ScriptCredential vh@(ValidatorHash h) -> do
-          case txOutDatum txout of
-            NoOutputDatum -> do
-              -- If the txout comes from a script address, the Datum should not be Nothing
-              logWarn $ NoDatumScriptAddr txout
-              pure Nothing
-            OutputDatumHash dh -> do
-              let v = maybe (Left vh) (Right . Validator) $ preview (scriptMap . ix (ScriptHash h)) ds
-              let d = maybe (Left dh) Right $ preview (dataMap . ix dh) ds
-              pure $ Just $ ScriptChainIndexTxOut (txOutAddress txout) v d (txOutValue txout) (txOutReferenceScript txout)
-            OutputDatum d -> do
-              let v = maybe (Left vh) (Right . Validator) $ preview (scriptMap . ix (ScriptHash h)) ds
-              pure $ Just $ ScriptChainIndexTxOut (txOutAddress txout) v (Right d) (txOutValue txout) (txOutReferenceScript txout)
+        ScriptCredential vh@(ValidatorHash h) ->
+          let v = maybe (Left vh) (Right . Validator) $ preview (scriptMap . ix (ScriptHash h)) ds
+              scriptOutput d = Just $ ScriptChainIndexTxOut (txOutAddress txout) v d (txOutValue txout) (txOutReferenceScript txout)
+           in case txOutDatum txout of
+            -- If the txout comes from a script address, the Datum should not be Nothing
+            NoOutputDatum      -> logWarn (NoDatumScriptAddr txout) >> pure Nothing
+            OutputDatumHash dh -> pure $ scriptOutput $ maybe (Left dh) Right $ preview (dataMap . ix dh) ds
+            OutputDatum d      -> pure $ scriptOutput $ Right d
 
 handleQuery ::
     forall effs.
