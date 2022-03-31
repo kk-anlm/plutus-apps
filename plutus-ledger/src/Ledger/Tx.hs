@@ -61,15 +61,17 @@ import Data.Proxy (Proxy (Proxy))
 import Data.Set (Set)
 import Data.Set qualified as Set
 import GHC.Generics (Generic)
-import Ledger.Address (PaymentPubKey, StakePubKey, Address)
+import Ledger.Address (Address (..), PaymentPubKey, StakePubKey, pubKeyAddress, scriptHashAddress, toValidatorHash)
 import Ledger.Crypto (Passphrase, PrivateKey, signTx, signTx', toPublicKey)
 import Ledger.Orphans ()
+import Ledger.Scripts (scriptHash, validatorHash)
 import Ledger.Tx.CardanoAPI (SomeCardanoApiTx (SomeTx))
 import Ledger.Tx.CardanoAPI qualified as CardanoAPI
-import Plutus.V2.Ledger.Api (Credential (PubKeyCredential, ScriptCredential), Datum, Validator,
-                             ValidatorHash, Value, addressCredential, toBuiltin, ScriptHash, DatumHash)
+import Legacy.Plutus.V2.Ledger.Tx (Tx (Tx, txCollateral, txData, txFee, txInputs, txMint, txMintScripts, txOutputs, txSignatures, txValidRange),
+                                   signatures, spentOutputs, strip)
+import Plutus.V2.Ledger.Api (Credential (PubKeyCredential, ScriptCredential), Datum, DatumHash, ScriptHash (ScriptHash),
+                             Validator, ValidatorHash (..), Value, getValidator, toBuiltin)
 import Plutus.V2.Ledger.Tx as Export
-import Legacy.Plutus.V2.Ledger.Tx (Tx (Tx, txInputs, txCollateral, txOutputs, txMint, txFee, txValidRange, txSignatures, txMintScripts, txData), strip, spentOutputs, signatures)
 import Prettyprinter (Pretty (pretty), braces, colon, hang, nest, viaShow, vsep, (<+>))
 
 -- | Transaction output that comes from a chain index query.
@@ -87,10 +89,10 @@ data ChainIndexTxOut =
     PublicKeyChainIndexTxOut { _ciTxOutAddress :: Address
                              , _ciTxOutValue   :: Value
                              }
-  | ScriptChainIndexTxOut { _ciTxOutAddress   :: Address
-                          , _ciTxOutValidator :: Either ValidatorHash Validator
-                          , _ciTxOutDatum     :: Either DatumHash Datum
-                          , _ciTxOutValue     :: Value
+  | ScriptChainIndexTxOut { _ciTxOutAddress         :: Address
+                          , _ciTxOutValidator       :: Either ValidatorHash Validator
+                          , _ciTxOutDatum           :: Either DatumHash Datum
+                          , _ciTxOutValue           :: Value
                           , _ciTxOutReferenceScript :: Maybe ScriptHash
                           }
   deriving (Show, Eq, Serialise, Generic
@@ -107,7 +109,7 @@ makePrisms ''ChainIndexTxOut
 -- 'ChainIndexTxOut' loses precision ('Datum' and 'Validator' are changed to 'DatumHash' and 'ValidatorHash' respectively)
 -- TODO: MELD:
 toTxOut :: ChainIndexTxOut -> TxOut
-toTxOut (PublicKeyChainIndexTxOut addr v)  = TxOut addr v NoOutputDatum Nothing
+toTxOut (PublicKeyChainIndexTxOut addr v)            = TxOut addr v NoOutputDatum Nothing
 toTxOut (ScriptChainIndexTxOut addr _ (Left dh) v s) = TxOut addr v (OutputDatumHash dh) s
 toTxOut (ScriptChainIndexTxOut addr _ (Right d) v s) = TxOut addr v (OutputDatum d) s
 
@@ -225,15 +227,18 @@ unspentOutputsTx t = Map.fromList $ fmap f $ zip [0..] $ txOutputs t where
 -- | Create a transaction output locked by a validator script hash
 --   with the given data script attached.
 scriptTxOut' :: Value -> Address -> Datum -> TxOut
-scriptTxOut' = error "MELD: please build TxOut by yourself"
+scriptTxOut' value address datum =
+    let toScriptHash (ValidatorHash bbs) = Just $ ScriptHash bbs
+     in TxOut address value (OutputDatum datum) (toScriptHash =<< toValidatorHash address)
 
 -- | Create a transaction output locked by a validator script and with the given data script attached.
 scriptTxOut :: Value -> Validator -> Datum -> TxOut
-scriptTxOut = error "MELD: please build TxOut by yourself"
+scriptTxOut value validator datum =
+    TxOut (scriptHashAddress . validatorHash $ validator) value (OutputDatum datum) (Just . scriptHash . getValidator $ validator)
 
 -- | Create a transaction output locked by a public payment key and optionnaly a public stake key.
 pubKeyTxOut :: Value -> PaymentPubKey -> Maybe StakePubKey -> TxOut
-pubKeyTxOut = error "MELD: please build TxOut by yourself"
+pubKeyTxOut value paymentPubKey stakePubKey = TxOut (pubKeyAddress paymentPubKey stakePubKey) value NoOutputDatum Nothing
 
 -- | Sign the transaction with a 'PrivateKey' and passphrase (ByteString) and add the signature to the
 --   transaction's list of signatures.
