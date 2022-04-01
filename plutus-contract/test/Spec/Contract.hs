@@ -30,7 +30,7 @@ import Ledger qualified
 import Ledger.Constraints qualified as Constraints
 import Ledger.Scripts (datumHash)
 import Ledger.Tx (getCardanoTxId)
-import Ledger.Value (adaSymbol, adaToken, singleton)
+import Ledger.Value (adaValueOf)
 import Legacy.Plutus.V2.Ledger.Tx (Tx)
 import Plutus.Contract as Con
 import Plutus.Contract.State qualified as State
@@ -136,10 +136,10 @@ tests =
                 (waitingForSlot theContract tag 20)
                 (void $ activateContract w1 theContract tag)
 
-        , let smallTx = Constraints.mustPayToPubKey (mockWalletPaymentPubKeyHash w2) (singleton adaSymbol adaToken 10)
+        , let smallTx = Constraints.mustPayToPubKey (mockWalletPaymentPubKeyHash w2) (adaValueOf 10)
               theContract :: Contract () Schema ContractError () = submitTx smallTx >>= awaitTxConfirmed . getCardanoTxId >> submitTx smallTx >>= awaitTxConfirmed . getCardanoTxId
           in run "handle several blockchain events"
-                (walletFundsChange w1 (singleton adaSymbol adaToken (-20))
+                (walletFundsChange w1 (adaValueOf (-20))
                     .&&. assertNoFailedTransactions
                     .&&. assertDone theContract tag (const True) "all blockchain events should be processed")
                 (void $ activateContract w1 theContract tag >> Trace.waitUntilSlot 3)
@@ -167,10 +167,10 @@ tests =
                 (void $ activateContract w1 theContract tag)
 
         , run "pay to wallet"
-            (walletFundsChange w1 (singleton adaSymbol adaToken (-20))
-                .&&. walletFundsChange w2 (singleton adaSymbol adaToken 20)
+            (walletFundsChange w1 (adaValueOf (-20))
+                .&&. walletFundsChange w2 (adaValueOf 20)
                 .&&. assertNoFailedTransactions)
-            (void $ Trace.payToWallet w1 w2 (singleton adaSymbol adaToken 20))
+            (void $ Trace.payToWallet w1 w2 (adaValueOf 20))
 
         , let theContract :: Contract () Schema ContractError () =
                   void $ awaitUtxoProduced (mockWalletAddress w2)
@@ -178,7 +178,7 @@ tests =
             (assertDone theContract tag (const True) "should receive a notification")
             (void $ do
                 activateContract w1 theContract tag
-                Trace.payToWallet w1 w2 (singleton adaSymbol adaToken 20)
+                Trace.payToWallet w1 w2 (adaValueOf 20)
                 Trace.waitNSlots 1
             )
 
@@ -190,7 +190,7 @@ tests =
             (assertDone theContract tag (const True) "should receive a notification")
             (void $ do
                 activateContract w1 theContract tag
-                Trace.payToWallet w1 w2 (singleton adaSymbol adaToken 20)
+                Trace.payToWallet w1 w2 (adaValueOf 20)
                 Trace.waitNSlots 1
             )
 
@@ -199,13 +199,13 @@ tests =
                 (assertDone theContract tag (== mockWalletPaymentPubKeyHash w2) "should return the wallet's public key")
                 (void $ activateContract w2 (void theContract) tag)
 
-        , let payment = Constraints.mustPayToPubKey (mockWalletPaymentPubKeyHash w2) (singleton adaSymbol adaToken 10)
+        , let payment = Constraints.mustPayToPubKey (mockWalletPaymentPubKeyHash w2) (adaValueOf 10)
               theContract :: Contract () Schema ContractError () = submitTx payment >>= awaitTxConfirmed . Ledger.getCardanoTxId
           in run "await tx confirmed"
             (assertDone theContract tag (const True) "should be done")
             (activateContract w1 theContract tag >> void (Trace.waitNSlots 1))
 
-        , let payment = Constraints.mustPayToPubKey (mockWalletPaymentPubKeyHash w2) (singleton adaSymbol adaToken 10)
+        , let payment = Constraints.mustPayToPubKey (mockWalletPaymentPubKeyHash w2) (adaValueOf 10)
               theContract :: Contract () Schema ContractError TxStatus =
                 submitTx payment >>= awaitTxStatusChange . Ledger.getCardanoTxId
           in run "await change in tx status"
@@ -214,7 +214,7 @@ tests =
 
         , let c :: Contract [Ledger.OutputDatum] Schema ContractError () = do
                 let w2PubKeyHash = mockWalletPaymentPubKeyHash w2
-                let payment = Constraints.mustPayWithDatumToPubKey w2PubKeyHash datum (singleton adaSymbol adaToken 10)
+                let payment = Constraints.mustPayWithDatumToPubKey w2PubKeyHash datum (adaValueOf 10)
                 tx <- submitTx payment
                 let txOuts = fmap fst $ Ledger.getCardanoTxOutRefs tx
                 -- tell the tx out' datum hash that was specified by 'mustPayWithDatumToPubKey'
@@ -235,11 +235,11 @@ tests =
         -- in case of two transactions with 'mustPayWithDatumToPubKey'
         , let c1 :: Contract [Maybe DatumHash] Schema ContractError () = do
                 let w2PubKeyHash = mockWalletPaymentPubKeyHash w2
-                let payment = Constraints.mustPayWithDatumToPubKey w2PubKeyHash datum1 (singleton adaSymbol adaToken 10)
+                let payment = Constraints.mustPayWithDatumToPubKey w2PubKeyHash datum1 (adaValueOf 10)
                 void $ submitTx payment
               c2 :: Contract [Maybe DatumHash] Schema ContractError () = do
                 let w3PubKeyHash = mockWalletPaymentPubKeyHash w3
-                let payment = Constraints.mustPayWithDatumToPubKey w3PubKeyHash datum2 (singleton adaSymbol adaToken 50)
+                let payment = Constraints.mustPayWithDatumToPubKey w3PubKeyHash datum2 (adaValueOf 50)
                 void $ submitTx payment
 
               datum1 = Datum $ PlutusTx.toBuiltinData (23 :: Integer)
@@ -256,7 +256,7 @@ tests =
                 -- Submit a payment tx of 10 lovelace to W2.
                 let w2PubKeyHash = mockWalletPaymentPubKeyHash w2
                 let payment = Constraints.mustPayToPubKey w2PubKeyHash
-                                                          (singleton adaSymbol adaToken 10)
+                                                          (adaValueOf 10)
                 tx <- submitTx payment
                 -- There should be 2 utxos. We suppose the first belongs to the
                 -- wallet calling the contract and the second one to W2.
