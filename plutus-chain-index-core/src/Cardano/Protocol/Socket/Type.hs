@@ -53,8 +53,7 @@ import Legacy.Prettyprinter.Extras
 
 import Ledger (Block, OnChainTx (..), TxId (..))
 import Legacy.Plutus.V2.Ledger.Tx (Tx)
-
-import PlutusTx.Builtins.Internal (BuiltinByteString (BuiltinByteString))
+import PlutusTx.Builtins.Internal (BuiltinByteString)
 
 -- | Tip of the block chain type (used by node protocols).
 type Tip = Block
