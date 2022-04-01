@@ -81,6 +81,7 @@ import Data.ByteString (ByteString)
 import Data.ByteString qualified as BS
 import Data.ByteString.Lazy qualified as BSL
 import Data.ByteString.Short qualified as SBS
+import Data.Coerce (coerce)
 import Data.Map (Map)
 import Data.Map qualified as Map
 import Data.Maybe (mapMaybe)
@@ -437,7 +438,13 @@ toCardanoMintWitness redeemers idx (P.MintingPolicy script) = do
 
 -- TODO: MELD: wait for cardano-api to update C.TxOut
 fromCardanoTxOut :: C.TxOut C.CtxTx era -> Either FromCardanoError P.TxOut
-fromCardanoTxOut = error "MELD: wait for cardano-api to update C.TxOut"
+fromCardanoTxOut (C.TxOut addr value datumHash) =
+  let address = fromCardanoAddress addr
+   in P.TxOut
+    <$> address
+    <*> pure (fromCardanoTxOutValue value)
+    <*> pure (fromCardanoTxOutDatumHash datumHash)
+    <*> (coerce . P.toValidatorHash <$> address)
 
 -- TODO: MELD: wait for cardano-api to update C.TxOut
 toCardanoTxOut
@@ -445,7 +452,14 @@ toCardanoTxOut
     -> (Maybe P.DatumHash -> Either ToCardanoError (C.TxOutDatum ctx C.AlonzoEra))
     -> P.TxOut
     -> Either ToCardanoError (C.TxOut ctx C.AlonzoEra)
-toCardanoTxOut = error "MELD: wait for cardano-api to update C.TxOut"
+toCardanoTxOut networkId fromHash (P.TxOut addr value outputDatum _) =
+  let datumHash = case outputDatum of
+        P.OutputDatumHash dh -> Just dh
+        P.OutputDatum dt     -> Just $ P.datumHash dt
+        P.NoOutputDatum      -> Nothing
+   in C.TxOut <$> toCardanoAddress networkId addr
+            <*> toCardanoTxOutValue value
+            <*> fromHash datumHash
 
 lookupDatum :: Map P.DatumHash P.Datum -> Maybe P.DatumHash -> Either ToCardanoError (C.TxOutDatum C.CtxTx C.AlonzoEra)
 lookupDatum datums datumHash =
@@ -533,10 +547,10 @@ toCardanoTxOutValue value = do
     when (Value.valueOf value Value.adaSymbol Value.adaToken == 0) (Left OutputHasZeroAda)
     C.TxOutValue C.MultiAssetInAlonzoEra <$> toCardanoValue value
 
-fromCardanoTxOutDatumHash :: C.TxOutDatum C.CtxTx era -> Maybe P.DatumHash
-fromCardanoTxOutDatumHash C.TxOutDatumNone       = Nothing
-fromCardanoTxOutDatumHash (C.TxOutDatumHash _ h) = Just $ P.DatumHash $ PlutusTx.toBuiltin (C.serialiseToRawBytes h)
-fromCardanoTxOutDatumHash (C.TxOutDatum _ d)     = Just $ P.DatumHash $ PlutusTx.toBuiltin (C.serialiseToRawBytes (C.hashScriptData d))
+fromCardanoTxOutDatumHash :: C.TxOutDatum C.CtxTx era -> P.OutputDatum
+fromCardanoTxOutDatumHash C.TxOutDatumNone       = P.NoOutputDatum
+fromCardanoTxOutDatumHash (C.TxOutDatumHash _ h) = P.OutputDatumHash $ P.DatumHash $ PlutusTx.toBuiltin (C.serialiseToRawBytes h)
+fromCardanoTxOutDatumHash (C.TxOutDatum _ d)     = P.OutputDatum $ P.Datum (fromCardanoScriptData d)
 
 toCardanoTxOutDatumHash :: Maybe P.DatumHash -> Either ToCardanoError (C.TxOutDatum ctx C.AlonzoEra)
 toCardanoTxOutDatumHash Nothing          = pure C.TxOutDatumNone
