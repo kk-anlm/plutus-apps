@@ -139,7 +139,7 @@ contract = selectList [failFalseC, failHeadNilC, divZeroC, divZeroTraceC, succes
     run validator = void $ do
       let addr = scriptAddress (validatorScript validator)
           hash = validatorHash (validatorScript validator)
-          tx = mustPayToOtherScript hash (Datum $ toBuiltinData ()) (Value.singleton Value.adaSymbol Value.adaToken 10)
+          tx = mustPayToOtherScript hash (Datum $ toBuiltinData ()) (Value.adaValueOf 10)
       r <- submitTx tx
       awaitTxConfirmed (getCardanoTxId r)
       utxos <- utxosAt addr
