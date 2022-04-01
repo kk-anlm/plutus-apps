@@ -125,7 +125,7 @@ source-repository-package
 source-repository-package
   type: git
   location: git@github.com:MELD-labs/cardano-wallet.git
-  tag: c2a36cba7f7c9b3315eeec94d321a32db9c58d1c
+  tag: b7a88443b6b33669643838fe9eeaaa9ac06f7daf
   subdir:
     lib/cli
     lib/core
