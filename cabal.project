@@ -32,7 +32,7 @@ allow-newer:
   size-based:template-haskell
 
 constraints:
-  hedgehog >= 1.1 && < 1.2
+  hedgehog ^>= 1.1
 
 -- These packages appear in our dependency tree and are very slow to build.
 -- Empirically, turning off optimization shaves off ~50% build time.
