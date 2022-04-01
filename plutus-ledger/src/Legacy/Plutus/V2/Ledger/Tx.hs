@@ -45,7 +45,7 @@ module Legacy.Plutus.V2.Ledger.Tx(
 import Codec.CBOR.Write qualified as Write
 import Codec.Serialise.Class (Serialise, encode)
 import Control.DeepSeq (NFData)
-import Control.Lens ( Lens', lens )
+import Control.Lens (Lens', lens)
 import Data.Aeson (FromJSON, FromJSONKey, ToJSON, ToJSONKey)
 import Data.ByteArray qualified as BA
 import Data.Map (Map)
@@ -53,16 +53,14 @@ import Data.Map qualified as Map
 import Data.Set qualified as Set
 import GHC.Generics (Generic)
 
-import PlutusTx.Lattice
-    ( BoundedMeetSemiLattice(top), MeetSemiLattice((/\)) )
+import PlutusTx.Lattice (BoundedMeetSemiLattice (top), MeetSemiLattice ((/\)))
 
 import Legacy.Plutus.V1.Ledger.Crypto (PubKey, Signature)
-import Plutus.V1.Ledger.Address ( Address )
+import Plutus.V1.Ledger.Address (Address)
 
-import Legacy.Plutus.V1.Ledger.Slot ( SlotRange )
-import Plutus.V1.Ledger.Scripts
-    ( Datum, DatumHash, MintingPolicy, Redeemer )
-import Plutus.V1.Ledger.Value ( Value )
+import Legacy.Plutus.V1.Ledger.Slot (SlotRange)
+import Plutus.V1.Ledger.Scripts (Datum, DatumHash, MintingPolicy, Redeemer)
+import Plutus.V1.Ledger.Value (Value)
 import Plutus.V1.Ledger.Value qualified as V
 
 import Legacy.Plutus.V1.Ledger.Address ()
@@ -71,7 +69,7 @@ import Legacy.Plutus.V1.Ledger.Orphans ()
 import Legacy.Plutus.V1.Ledger.Scripts ()
 import Legacy.Plutus.V1.Ledger.Value ()
 import Plutus.V2.Ledger.Contexts (TxOut (txOutValue))
-import Plutus.V2.Ledger.Tx (RedeemerPtr, Redeemers, ScriptTag, TxId, TxIn (txInRef), TxInType, TxOutRef, OutputDatum)
+import Plutus.V2.Ledger.Tx (OutputDatum, RedeemerPtr, Redeemers, ScriptTag, TxId, TxIn (txInRef), TxInType, TxOutRef)
 
 {- Note [Serialisation and hashing]
 
@@ -110,6 +108,8 @@ deriving anyclass instance Serialise TxInType
 
 deriving anyclass instance ToJSON TxId
 deriving anyclass instance FromJSON TxId
+deriving anyclass instance ToJSONKey TxId
+deriving anyclass instance FromJSONKey TxId
 deriving anyclass instance Serialise TxId
 
 deriving anyclass instance ToJSON TxOutRef
