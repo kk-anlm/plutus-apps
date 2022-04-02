@@ -32,9 +32,9 @@ import Ledger.Value qualified as Value
 import Legacy.Data.Aeson.Extras (decodeByteString, decodeSerialise, encodeSerialise)
 import PlutusTx.Prelude qualified as PlutusTx
 import Test.Tasty (TestTree, defaultMain, testGroup)
+import Test.Tasty.Hedgehog (testProperty)
 import Test.Tasty.HUnit (testCase)
 import Test.Tasty.HUnit qualified as HUnit
-import Test.Tasty.Hedgehog (testProperty)
 
 main :: IO ()
 main = defaultMain tests
@@ -64,21 +64,20 @@ tests = testGroup "all tests" [
         testProperty "show-fromHex" ledgerBytesShowFromHexProp,
         testProperty "toJSON-fromJSON" ledgerBytesToJSONProp
         ],
-    -- TODO: MELD: see failure reason at plutus-ledger/src/Legacy/Plutus/V1/Ledger/Value.hs
-    -- testGroup "Value" ([
-    --     testProperty "Value ToJSON/FromJSON" (jsonRoundTrip Gen.genValue),
-    --     testProperty "CurrencySymbol ToJSON/FromJSON" (jsonRoundTrip $ Value.currencySymbol <$> Gen.genSizedByteStringExact 32),
-    --     testProperty "TokenName ToJSON/FromJSON" (jsonRoundTrip Gen.genTokenName),
-    --     testProperty "TokenName looks like escaped bytestring ToJSON/FromJSON" (jsonRoundTrip . pure $ ("\NUL0xc0ffee" :: Value.TokenName)),
-    --     testProperty "CurrencySymbol IsString/Show" currencySymbolIsStringShow
-    --     ] ++ (let   vlJson :: BSL.ByteString
-    --                 vlJson = "{\"getValue\":[[{\"unCurrencySymbol\":\"ab01ff\"},[[{\"unTokenName\":\"myToken\"},50]]]]}"
-    --                 vlValue = Value.singleton "ab01ff" "myToken" 50
-    --             in byteStringJson vlJson vlValue)
-    --       ++ (let   vlJson :: BSL.ByteString
-    --                 vlJson = "{\"getValue\":[[{\"unCurrencySymbol\":\"\"},[[{\"unTokenName\":\"\"},50]]]]}"
-    --                 vlValue = Ada.lovelaceValueOf 50
-    --             in byteStringJson vlJson vlValue)),
+    testGroup "Value" ([
+        testProperty "Value ToJSON/FromJSON" (jsonRoundTrip Gen.genValue),
+        testProperty "CurrencySymbol ToJSON/FromJSON" (jsonRoundTrip $ Value.currencySymbol <$> Gen.genSizedByteStringExact 32),
+        testProperty "TokenName ToJSON/FromJSON" (jsonRoundTrip Gen.genTokenName),
+        testProperty "TokenName looks like escaped bytestring ToJSON/FromJSON" (jsonRoundTrip . pure $ ("\NUL0xc0ffee" :: Value.TokenName)),
+        testProperty "CurrencySymbol IsString/Show" currencySymbolIsStringShow
+        ] ++ (let   vlJson :: BSL.ByteString
+                    vlJson = "{\"getValue\":[[{\"unCurrencySymbol\":\"ab01ff\"},[[{\"unTokenName\":\"myToken\"},50]]]]}"
+                    vlValue = Value.singleton "ab01ff" "myToken" 50
+                in byteStringJson vlJson vlValue)
+          ++ (let   vlJson :: BSL.ByteString
+                    vlJson = "{\"getValue\":[[{\"unCurrencySymbol\":\"\"},[[{\"unTokenName\":\"\"},50]]]]}"
+                    vlValue = Value.singleton Value.adaSymbol Value.adaToken 50
+                in byteStringJson vlJson vlValue)),
     testGroup "Tx" [
         -- testProperty "TxOut fromTxOut/toTxOut" ciTxOutRoundTrip
         ],
