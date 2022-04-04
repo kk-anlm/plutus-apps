@@ -67,7 +67,7 @@ import Ledger.Orphans ()
 import Ledger.Scripts (scriptHash, validatorHash)
 import Ledger.Tx.CardanoAPI (SomeCardanoApiTx (SomeTx))
 import Ledger.Tx.CardanoAPI qualified as CardanoAPI
-import Legacy.Plutus.V2.Ledger.Tx (Tx (Tx, txCollateral, txData, txFee, txInputs, txMint, txMintScripts, txOutputs, txSignatures, txValidRange),
+import Legacy.Plutus.V2.Ledger.Tx (Tx (Tx, txCollateral, txData, txFee, txInputs, txMint, txMintScripts, txOutputs, txReferenceInputs, txSignatures, txSpendingRedeemers, txValidRange),
                                    signatures, spentOutputs, strip)
 import Plutus.V2.Ledger.Api (Credential (PubKeyCredential, ScriptCredential), Datum, DatumHash, ScriptHash (ScriptHash),
                              Validator, ValidatorHash (..), Value, getValidator, toBuiltin)
@@ -186,9 +186,10 @@ getCardanoTxFee :: CardanoTx -> Value
 getCardanoTxFee = onCardanoTx txFee (\_ -> error "Ledger.Tx.getCardanoTxFee: Expecting a mock tx, not an Alonzo tx")
 
 instance Pretty Tx where
-    pretty t@Tx{txInputs, txCollateral, txOutputs, txMint, txFee, txValidRange, txSignatures, txMintScripts, txData} =
+    pretty t@Tx{txInputs, txReferenceInputs, txCollateral, txOutputs, txMint, txFee, txValidRange, txSignatures, txMintScripts, txSpendingRedeemers, txData} =
         let lines' =
                 [ hang 2 (vsep ("inputs:" : fmap pretty (Set.toList txInputs)))
+                , hang 2 (vsep ("reference inputs:" : fmap pretty (Set.toList txReferenceInputs)))
                 , hang 2 (vsep ("collateral inputs:" : fmap pretty (Set.toList txCollateral)))
                 , hang 2 (vsep ("outputs:" : fmap pretty txOutputs))
                 , "mint:" <+> pretty txMint
@@ -196,6 +197,7 @@ instance Pretty Tx where
                 , hang 2 (vsep ("mps:": fmap pretty (Set.toList txMintScripts)))
                 , hang 2 (vsep ("signatures:": fmap (pretty . fst) (Map.toList txSignatures)))
                 , "validity range:" <+> viaShow txValidRange
+                , hang 2 (vsep ("spending redeemers:": fmap (pretty . snd) (Map.toList txSpendingRedeemers) ))
                 , hang 2 (vsep ("data:": fmap (pretty . snd) (Map.toList txData) ))
                 ]
             txid = txId t
