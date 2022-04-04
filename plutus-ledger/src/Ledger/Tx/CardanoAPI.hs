@@ -23,7 +23,7 @@ module Ledger.Tx.CardanoAPI(
   , fromCardanoTxInsCollateral
   , fromCardanoTxInWitness
   , fromCardanoTxOut
-  , fromCardanoTxOutDatumHash
+  , fromCardanoTxOutDatum
   , fromCardanoAddress
   , fromCardanoMintValue
   , fromCardanoValue
@@ -436,17 +436,17 @@ toCardanoMintWitness redeemers idx (P.MintingPolicy script) = do
         <*> pure (C.fromPlutusData $ Api.toData redeemer)
         <*> pure zeroExecutionUnits
 
--- TODO: MELD: wait for cardano-api to update C.TxOut
+-- FIXME: MELD: wait for cardano-api to update C.TxOut
 fromCardanoTxOut :: C.TxOut C.CtxTx era -> Either FromCardanoError P.TxOut
 fromCardanoTxOut (C.TxOut addr value datumHash) =
   let address = fromCardanoAddress addr
    in P.TxOut
     <$> address
     <*> pure (fromCardanoTxOutValue value)
-    <*> pure (fromCardanoTxOutDatumHash datumHash)
+    <*> pure (fromCardanoTxOutDatum datumHash)
     <*> (coerce . P.toValidatorHash <$> address)
 
--- TODO: MELD: wait for cardano-api to update C.TxOut
+-- FIXME: MELD: wait for cardano-api to update C.TxOut
 toCardanoTxOut
     :: C.NetworkId
     -> (Maybe P.DatumHash -> Either ToCardanoError (C.TxOutDatum ctx C.AlonzoEra))
@@ -547,10 +547,10 @@ toCardanoTxOutValue value = do
     when (Value.valueOf value Value.adaSymbol Value.adaToken == 0) (Left OutputHasZeroAda)
     C.TxOutValue C.MultiAssetInAlonzoEra <$> toCardanoValue value
 
-fromCardanoTxOutDatumHash :: C.TxOutDatum C.CtxTx era -> P.OutputDatum
-fromCardanoTxOutDatumHash C.TxOutDatumNone       = P.NoOutputDatum
-fromCardanoTxOutDatumHash (C.TxOutDatumHash _ h) = P.OutputDatumHash $ P.DatumHash $ PlutusTx.toBuiltin (C.serialiseToRawBytes h)
-fromCardanoTxOutDatumHash (C.TxOutDatum _ d)     = P.OutputDatum $ P.Datum (fromCardanoScriptData d)
+fromCardanoTxOutDatum :: C.TxOutDatum C.CtxTx era -> P.OutputDatum
+fromCardanoTxOutDatum C.TxOutDatumNone       = P.NoOutputDatum
+fromCardanoTxOutDatum (C.TxOutDatumHash _ h) = P.OutputDatumHash $ P.DatumHash $ PlutusTx.toBuiltin (C.serialiseToRawBytes h)
+fromCardanoTxOutDatum (C.TxOutDatum _ d)     = P.OutputDatum $ P.Datum (fromCardanoScriptData d)
 
 toCardanoTxOutDatumHash :: Maybe P.DatumHash -> Either ToCardanoError (C.TxOutDatum ctx C.AlonzoEra)
 toCardanoTxOutDatumHash Nothing          = pure C.TxOutDatumNone

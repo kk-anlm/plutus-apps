@@ -12,7 +12,7 @@ import Control.Monad (replicateM)
 import Data.Aeson (Value)
 import Data.Aeson qualified as Aeson
 import Data.ByteString (ByteString)
-import Ledger (ValidatorHash (ValidatorHash))
+import Ledger (ScriptPurpose, ValidatorHash (ValidatorHash))
 import Ledger qualified
 import Ledger.Address (Address (..), PaymentPubKey, PaymentPubKeyHash, StakePubKey, StakePubKeyHash)
 import Ledger.Bytes (LedgerBytes)
@@ -28,6 +28,8 @@ import Legacy.Plutus.V1.Ledger.Slot (Slot)
 import Legacy.Plutus.V2.Ledger.Tx (Tx)
 import Plutus.Contract.Effects (ActiveEndpoint (..), PABReq (..), PABResp (..))
 import Plutus.Contract.StateMachine (ThreadToken)
+import Plutus.V1.Ledger.Credential (Credential, StakingCredential)
+import Plutus.V1.Ledger.DCert (DCert)
 import PlutusTx qualified
 import PlutusTx.AssocMap qualified as AssocMap
 import PlutusTx.Prelude qualified as PlutusTx
@@ -87,6 +89,22 @@ instance Arbitrary ToCardanoError where
     shrink = genericShrink
 
 instance Arbitrary Tx where
+    arbitrary = genericArbitrary
+    shrink = genericShrink
+
+instance Arbitrary ScriptPurpose where
+    arbitrary = genericArbitrary
+    shrink = genericShrink
+
+instance Arbitrary StakingCredential where
+    arbitrary = genericArbitrary
+    shrink = genericShrink
+
+instance Arbitrary Credential where
+    arbitrary = genericArbitrary
+    shrink = genericShrink
+
+instance Arbitrary DCert where
     arbitrary = genericArbitrary
     shrink = genericShrink
 
