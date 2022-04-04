@@ -77,8 +77,8 @@ import Ledger.TimeSlot qualified as TimeSlot
 import Ledger.Tx (txId)
 import Legacy.Plutus.V1.Ledger.Crypto (PubKey, Signature)
 import Legacy.Plutus.V1.Ledger.Slot qualified as Slot
-import Legacy.Plutus.V2.Ledger.Tx (Tx (..), collateralInputs, datumWitnesses, inputs, lookupRedeemer, signatures,
-                                   updateUtxoCollateral)
+import Legacy.Plutus.V2.Ledger.Tx (Tx (..), collateralInputs, datumWitnesses, inputs, lookupRedeemer, referenceInputs,
+                                   signatures, updateUtxoCollateral)
 import Plutus.V1.Ledger.Address
 import Plutus.V1.Ledger.Credential (Credential (..))
 import Plutus.V1.Ledger.Interval qualified as Interval
@@ -439,6 +439,7 @@ mkTxInfo :: ValidationMonad m => Tx -> m TxInfo
 mkTxInfo tx = do
     slotCfg <- vctxSlotConfig <$> ask
     txins <- traverse mkIn $ Set.toList $ view inputs tx
+    txReferenceIns <- traverse mkIn $ Set.toList $ view referenceInputs tx
     let ptx = TxInfo
             { txInfoInputs = txins
             , txInfoOutputs = txOutputs tx
@@ -450,8 +451,8 @@ mkTxInfo tx = do
             , txInfoSignatories = fmap pubKeyHash $ Map.keys (tx ^. signatures)
             , txInfoData = AssocMap.fromList $  Map.toList $ tx ^. datumWitnesses
             , txInfoId = txId tx
-            , txInfoReferenceInputs = [] -- TODO: MELD:
-            , txInfoRedeemers = AssocMap.empty -- TODO: MELD:
+            , txInfoReferenceInputs = txReferenceIns
+            , txInfoRedeemers = AssocMap.fromList $  Map.toList $ txSpendingRedeemers tx
             }
     pure ptx
 

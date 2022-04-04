@@ -16,6 +16,7 @@ module Legacy.Plutus.V2.Ledger.Tx(
     -- * Transactions
     Tx(..),
     inputs,
+    referenceInputs,
     collateralInputs,
     outputs,
     spentOutputs,
@@ -59,6 +60,7 @@ import Legacy.Plutus.V1.Ledger.Crypto (PubKey, Signature)
 import Plutus.V1.Ledger.Address (Address)
 
 import Legacy.Plutus.V1.Ledger.Slot (SlotRange)
+import Plutus.V1.Ledger.DCert (DCert)
 import Plutus.V1.Ledger.Scripts (Datum, DatumHash, MintingPolicy, Redeemer)
 import Plutus.V1.Ledger.Value (Value)
 import Plutus.V1.Ledger.Value qualified as V
@@ -68,7 +70,7 @@ import Legacy.Plutus.V1.Ledger.Interval ()
 import Legacy.Plutus.V1.Ledger.Orphans ()
 import Legacy.Plutus.V1.Ledger.Scripts ()
 import Legacy.Plutus.V1.Ledger.Value ()
-import Plutus.V2.Ledger.Contexts (TxOut (txOutValue))
+import Plutus.V2.Ledger.Contexts (ScriptPurpose, TxOut (txOutValue))
 import Plutus.V2.Ledger.Tx (OutputDatum, RedeemerPtr, Redeemers, ScriptTag, TxId, TxIn (txInRef), TxInType, TxOutRef)
 
 {- Note [Serialisation and hashing]
@@ -126,6 +128,18 @@ deriving anyclass instance ToJSON ScriptTag
 deriving anyclass instance FromJSON ScriptTag
 deriving anyclass instance Serialise ScriptTag
 
+deriving anyclass instance ToJSON DCert
+deriving anyclass instance FromJSON DCert
+deriving anyclass instance Serialise DCert
+
+deriving anyclass instance ToJSON ScriptPurpose
+deriving anyclass instance FromJSON ScriptPurpose
+deriving anyclass instance Serialise ScriptPurpose
+deriving anyclass instance ToJSONKey ScriptPurpose
+deriving anyclass instance FromJSONKey ScriptPurpose
+deriving anyclass instance NFData ScriptPurpose
+deriving anyclass instance Ord ScriptPurpose
+
 deriving anyclass instance ToJSON RedeemerPtr
 deriving anyclass instance FromJSON RedeemerPtr
 deriving anyclass instance ToJSONKey RedeemerPtr
@@ -134,25 +148,29 @@ deriving anyclass instance Serialise RedeemerPtr
 
 -- | A transaction, including witnesses for its inputs.
 data Tx = Tx {
-    txInputs      :: Set.Set TxIn,
+    txInputs            :: Set.Set TxIn,
     -- ^ The inputs to this transaction.
-    txCollateral  :: Set.Set TxIn,
+    txReferenceInputs   :: Set.Set TxIn,
+    -- ^ The reference inputs to this transaction.
+    txCollateral        :: Set.Set TxIn,
     -- ^ The collateral inputs to cover the fees in case validation of the transaction fails.
-    txOutputs     :: [TxOut],
+    txOutputs           :: [TxOut],
     -- ^ The outputs of this transaction, ordered so they can be referenced by index.
-    txMint        :: !Value,
+    txMint              :: !Value,
     -- ^ The 'Value' minted by this transaction.
-    txFee         :: !Value,
+    txFee               :: !Value,
     -- ^ The fee for this transaction.
-    txValidRange  :: !SlotRange,
+    txValidRange        :: !SlotRange,
     -- ^ The 'SlotRange' during which this transaction may be validated.
-    txMintScripts :: Set.Set MintingPolicy,
+    txMintScripts       :: Set.Set MintingPolicy,
     -- ^ The scripts that must be run to check minting conditions.
-    txSignatures  :: Map PubKey Signature,
+    txSignatures        :: Map PubKey Signature,
     -- ^ Signatures of this transaction.
-    txRedeemers   :: Redeemers,
+    txRedeemers         :: Redeemers,
     -- ^ Redeemers of the minting scripts.
-    txData        :: Map DatumHash Datum
+    txSpendingRedeemers :: Map ScriptPurpose Redeemer,
+    -- ^ Redeemers of the consumed script outputs.
+    txData              :: Map DatumHash Datum
     -- ^ Datum objects recorded on this transaction.
     } deriving stock (Show, Eq, Generic)
       deriving anyclass (ToJSON, FromJSON, Serialise, NFData)
@@ -160,6 +178,7 @@ data Tx = Tx {
 instance Semigroup Tx where
     tx1 <> tx2 = Tx {
         txInputs = txInputs tx1 <> txInputs tx2,
+        txReferenceInputs = txReferenceInputs tx1 <> txReferenceInputs tx2,
         txCollateral = txCollateral tx1 <> txCollateral tx2,
         txOutputs = txOutputs tx1 <> txOutputs tx2,
         txMint = txMint tx1 <> txMint tx2,
@@ -168,11 +187,12 @@ instance Semigroup Tx where
         txMintScripts = txMintScripts tx1 <> txMintScripts tx2,
         txSignatures = txSignatures tx1 <> txSignatures tx2,
         txRedeemers = txRedeemers tx1 <> txRedeemers tx2,
+        txSpendingRedeemers = txSpendingRedeemers tx1 <> txSpendingRedeemers tx2,
         txData = txData tx1 <> txData tx2
         }
 
 instance Monoid Tx where
-    mempty = Tx mempty mempty mempty mempty mempty top mempty mempty mempty mempty
+    mempty = Tx mempty mempty mempty mempty mempty mempty top mempty mempty mempty mempty mempty
 
 instance BA.ByteArrayAccess Tx where
     length        = BA.length . Write.toStrictByteString . encode
@@ -183,6 +203,12 @@ inputs :: Lens' Tx (Set.Set TxIn)
 inputs = lens g s where
     g = txInputs
     s tx i = tx { txInputs = i }
+
+-- | The reference inputs of a transaction.
+referenceInputs :: Lens' Tx (Set.Set TxIn)
+referenceInputs = lens g s where
+    g = txInputs
+    s tx i = tx { txReferenceInputs = i }
 
 -- | The collateral inputs of a transaction for paying fees when validating the transaction fails.
 collateralInputs :: Lens' Tx (Set.Set TxIn)

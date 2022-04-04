@@ -32,14 +32,14 @@ import Plutus.V1.Ledger.Bytes (bytes)
 import Plutus.V1.Ledger.Scripts (ScriptHash (..))
 import Plutus.V1.Ledger.Time (DiffMilliSeconds (DiffMilliSeconds))
 import Plutus.V1.Ledger.Value (AssetClass (AssetClass))
-import Plutus.V2.Ledger.Api (Address, BuiltinByteString, BuiltinData, Credential, CurrencySymbol (CurrencySymbol), Data,
-                             Datum (Datum), DatumHash (DatumHash), Extended, Interval, LedgerBytes (LedgerBytes),
-                             LowerBound, MintingPolicy (MintingPolicy), MintingPolicyHash (MintingPolicyHash),
-                             OutputDatum, POSIXTime (POSIXTime), PubKeyHash (PubKeyHash), Redeemer (Redeemer),
-                             RedeemerHash (RedeemerHash), Script, StakeValidator (StakeValidator),
-                             StakeValidatorHash (StakeValidatorHash), StakingCredential, TokenName (TokenName),
-                             TxId (TxId), TxOut, TxOutRef, UpperBound, Validator (Validator),
-                             ValidatorHash (ValidatorHash), Value (Value), fromBytes)
+import Plutus.V2.Ledger.Api (Address, BuiltinByteString, BuiltinData, Credential, CurrencySymbol (CurrencySymbol),
+                             DCert, Data, Datum (Datum), DatumHash (DatumHash), Extended, Interval,
+                             LedgerBytes (LedgerBytes), LowerBound, MintingPolicy (MintingPolicy),
+                             MintingPolicyHash (MintingPolicyHash), OutputDatum, POSIXTime (POSIXTime),
+                             PubKeyHash (PubKeyHash), Redeemer (Redeemer), RedeemerHash (RedeemerHash), Script,
+                             ScriptPurpose, StakeValidator (StakeValidator), StakeValidatorHash (StakeValidatorHash),
+                             StakingCredential, TokenName (TokenName), TxId (TxId), TxOut, TxOutRef, UpperBound,
+                             Validator (Validator), ValidatorHash (ValidatorHash), Value (Value), fromBytes)
 import Plutus.V2.Ledger.Tx (RedeemerPtr, ScriptTag, TxIn, TxInType)
 import PlutusCore (Kind, Some, Term, Type, ValueOf, Version)
 import PlutusTx.AssocMap qualified as AssocMap
@@ -124,6 +124,8 @@ instance OpenApi.ToSchema Data where
           ]
 deriving instance OpenApi.ToSchema ann => OpenApi.ToSchema (Kind ann)
 deriving instance OpenApi.ToSchema Tx
+deriving instance OpenApi.ToSchema ScriptPurpose
+deriving instance OpenApi.ToSchema DCert
 deriving instance OpenApi.ToSchema ScriptTag
 deriving instance OpenApi.ToSchema RedeemerPtr
 deriving instance OpenApi.ToSchema TxOutRef
