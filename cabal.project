@@ -29,7 +29,8 @@ benchmarks: true
 test-show-details: streaming
 
 allow-newer:
-  size-based:template-haskell
+  size-based:template-haskell,
+  ekg:aeson
 
 constraints:
   hedgehog ^>= 1.1
@@ -126,7 +127,7 @@ source-repository-package
 source-repository-package
   type: git
   location: git@github.com:MELD-labs/cardano-wallet.git
-  tag: b7a88443b6b33669643838fe9eeaaa9ac06f7daf
+  tag: 4cf20a024dac25bd167db7cfc7d0d9f12959641a
   subdir:
     lib/cli
     lib/core
@@ -143,7 +144,7 @@ source-repository-package
 source-repository-package
   type: git
   location: https://github.com/MELD-labs/cardano-node
-  tag: 4d8710d5648849d60cc6f279cdc8f6106811c477
+  tag: 2bf38c577ace57c99213a671d46db600479eeec2
   subdir:
     cardano-api
     cardano-cli
@@ -178,7 +179,7 @@ source-repository-package
 source-repository-package
   type: git
   location: https://github.com/input-output-hk/cardano-ledger
-  tag: 7f3339e1f98946cc6189c4e4f3c6b3884cbefc1a
+  tag: 70dbfc9f12283666e29f8492aff5da9b1c8c5a7f
   subdir:
     eras/alonzo/impl
     eras/babbage/impl
@@ -205,7 +206,7 @@ source-repository-package
 source-repository-package
   type: git
   location: https://github.com/input-output-hk/ouroboros-network
-  tag: 818845b9e53f5f24dd245e8b489541c26ad92586
+  tag: 8b689a66e74ce3140d2114e6ee8ef6983470fb3f
   subdir:
     io-classes
     io-sim
@@ -276,12 +277,6 @@ source-repository-package
   type: git
   location: https://github.com/input-output-hk/Win32-network
   tag: 3825d3abf75f83f406c1f7161883c438dac7277d
-
--- The origin ekg lib is forcing aeson >= 0.4 && < 1.6. Also have to use this PR of ekg-json: https://github.com/tibbe/ekg-json/pull/12
-source-repository-package
-  type: git
-  location: git@github.com:kk-anlm/ekg.git
-  tag: d13ab19a262d8945298c32477bd878c991d9bad9
 
 source-repository-package
   type: git
